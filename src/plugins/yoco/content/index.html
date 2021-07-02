@@ -1,0 +1,133 @@
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width">
+  <script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
+</head>
+
+<body>
+  <form id="payment-form" method="POST">
+    <div class="one-liner">
+      <div id="card-frame">
+        <!-- Yoco Inline form will be added here -->
+      </div>
+      <button class="yc-submit-button" id="pay-button" type="submit">
+        PAY NOW
+      </button>
+    </div>
+    <p class="success-payment-message" />
+  </form>
+  <style>
+    #payment-form {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      position: fixed;
+      width: calc(100% - 40px);
+      height: 100%;
+      line-height: 100%;
+      padding: 20px;
+      vertical-align: middle;
+    }
+
+    .yc-submit-button {
+      height: 48px;
+      color: #ffffff;
+      border-radius: 3px;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 20px;
+      text-align: center;
+      background: #37a2e0;
+      margin: 18px auto 0 auto;
+      border-width: 0;
+      width: 100%;
+      display: block;
+      transition: 0.75s cubic-bezier(0.41, 1.44, 0.47, 1);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .yc-info-tooltip-container {
+      bottom: 0 !important;
+    }
+  </style>
+  <script>
+    const buttonPay = document.getElementById('pay-button');
+    const form = document.getElementById('payment-form');
+    const variables = JSON.parse('{{VARIABLES}}');
+    console.log(variables)
+    const setDefaultPayText = (newText, disabled) => {
+      if (newText === undefined) {
+        buttonPay.disabled = false;
+        buttonPay.innerText = `PAY ${variables.amountFormatted}`;
+        return;
+      }
+      if (disabled !== undefined)
+        buttonPay.disabled = disabled;
+      buttonPay.innerText = newText;
+    }
+    // Replace the supplied `publicKey` with your own.
+    // Ensure that in production you use a production public_key.
+    var sdk = new window.YocoSDK({
+      publicKey: variables.publicKey
+    });
+
+    // Create a new dropin form instance
+    var inline = sdk.inline({
+      layout: 'basic',
+      showErrors: false,
+      showSubmitButton: false,
+      amountInCents: variables.amountCents,
+      currency: variables.currency,
+      description: variables.description,
+      metadata: variables.metadata,
+      customer: variables.customer,
+    });
+    // this ID matches the id of the element we created earlier.
+    inline.mount('#card-frame');
+
+    // Run our code when your form is submitted
+    form.addEventListener('submit', function(event) {
+      event.preventDefault()
+      // Disable the button to prevent multiple clicks while processing
+      setDefaultPayText('Validating Card...', true);
+      // This is the inline object we created earlier with the sdk
+      inline.createToken().then(function(result) {
+        // Re-enable button now that request is complete
+        // (i.e. on success, on error and when auth is cancelled)
+        setDefaultPayText('Creating Secure Token...', true);
+        if (result.error) {
+          const errorMessage = result.error.message;
+          errorMessage && alert("error occured: " + errorMessage);
+        } else {
+          var myHeaders = new Headers();
+          myHeaders.append("Content-Type", "application/json");
+          var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: JSON.stringify(result),
+            redirect: 'follow'
+          };
+          setDefaultPayText('Requesting Funds...', true);
+          fetch(variables.url, requestOptions)
+            .then(response => response.json())
+            .then(result => {
+              setDefaultPayText('Payment Received...', true);
+            }).catch(x => {
+              setDefaultPayText();
+              alert("error occured: " + JSON.stringify(x));
+            })
+        }
+      }).catch(function(error) {
+        // Re-enable button now that request is complete
+        setDefaultPayText();
+        alert("error occured: " + error);
+      });
+    });
+    setDefaultPayText();
+  </script>
+</body>
+
+</html>

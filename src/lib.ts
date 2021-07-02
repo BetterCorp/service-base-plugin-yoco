@@ -112,6 +112,7 @@ export enum YocoSourcePluginEvents {
 export interface YocoPluginConfig {
   myHost: string;
   commsToken: string;
+  commsTokenIV: string;
   sandboxConfig: YocoSandboxConfig;
 }
 export interface YocoSandboxConfig {

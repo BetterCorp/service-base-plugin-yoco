@@ -6,6 +6,9 @@ import AXIOS from 'axios';
 import { AxiosResponse as AResponse } from 'axios';
 import * as crypto from 'crypto';
 import * as FS from 'fs';
+import * as PATH from 'path';
+import { eAndD } from './eAndD';
+import * as EXPRESS from 'express';
 
 export class Plugin implements IPlugin {
     private getYocoUrl(action: string): string {
@@ -14,6 +17,24 @@ export class Plugin implements IPlugin {
     public init(features: PluginFeature): Promise<void> {
         const self = this;
         return new Promise((resolve) => {
+            features.initForPlugins('plugin-express', 'use', {
+                arg1: async (req: any, res: any, next: Function) => {
+                    features.log.debug(`REQ[${ req.method }] ${ req.path } (${ JSON.stringify(req.query) })`);
+                    res.setHeader('Access-Control-Allow-Headers', '*');
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    res.setHeader('Access-Control-Allow-Methods', '*');
+
+                    if (req.method.toUpperCase() === 'OPTIONS')
+                        return res.sendStatus(200);
+
+                    next();
+                }
+            });
+            features.log.info('USE JSON FOR EXPRESS');
+            features.initForPlugins('plugin-express', 'use', {
+                arg1: EXPRESS.json({ limit: '5mb' })
+            });
+
             features.onReturnableEvent(null, YocoPluginEvents.ping, (resolve, reject, data) => {
                 if (Tools.isNullOrUndefined(data))
                     return reject('DATA UNDEFINED');
@@ -58,10 +79,11 @@ export class Plugin implements IPlugin {
                         random: crypto.randomBytes(Math.floor((Math.random() * 100) + 1)).toString('hex'),
                         notifyService: data.data.sourcePluginName
                     };
-                    let requestCipher = crypto.createCipheriv('aes-256-ccm', Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
+                    /*let requestCipher = crypto.createCipheriv('aes-256-ccm', Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
                         authTagLength: 16
                     });
-                    let requestKey = Buffer.concat([requestCipher.update(JSON.stringify(workingObj)), requestCipher.final()]).toString('base64');
+                    let requestKey = Buffer.concat([requestCipher.update(JSON.stringify(workingObj)), requestCipher.final()]).toString('base64');*/
+                    let requestKey = eAndD.encrypt(features, JSON.stringify(workingObj));
                     /*let key: any = {
                       char1: Math.floor((Math.random() * 5) + 1),
                       char2: Math.floor((Math.random() * 5) + 1) + 5,
@@ -114,16 +136,17 @@ export class Plugin implements IPlugin {
                 arg1: '/Yoco/:token',
                 arg2: (req: ERequest, res: EResponse) => {
                     try {
-                        const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
+                        /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
                         const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
                             authTagLength: 16
                         });
-                        let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');
+                        let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');*/
+                        let decrypted = eAndD.decrypt(features, decodeURIComponent(req.params.token));
                         let data = JSON.parse(decrypted);
                         let now = new Date().getTime();
-                        if (now < data.timeExpiry)
+                        if (now >= data.timeExpiry)
                             throw 'Time expired!';
-                        let content = FS.readFileSync('./content/index.html').toString();
+                        let content = FS.readFileSync(PATH.join(features.cwd, './src/plugins/yoco/content/index.html')).toString();
                         let variablesToClient = {
                             url: features.getPluginConfig().myHost + '/Yoco/' + req.params.token,
                             amountFormatted: data.amountFormatted,
@@ -141,7 +164,7 @@ export class Plugin implements IPlugin {
                                 lastName: data.lastName
                             }
                         };
-                        content.replace('{{VARIABLES}}', JSON.stringify(variablesToClient));
+                        content = content.replace('{{VARIABLES}}', JSON.stringify(variablesToClient));
                         res.setHeader('content-type', 'text/html');
                         res.send(content);
                     }
@@ -156,15 +179,17 @@ export class Plugin implements IPlugin {
                 arg1: '/Yoco/:token',
                 arg2: (req: ERequest, res: EResponse) => {
                     try {
-                        const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
+                        /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
                         const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
                             authTagLength: 16
                         });
-                        let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');
+                        let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');*/
+                        let decrypted = eAndD.decrypt(features, decodeURIComponent(req.params.token));
                         let data = JSON.parse(decrypted);
                         let reqData = req.body;
+                        console.log(reqData);
                         let now = new Date().getTime();
-                        if (now < data.timeExpiry)
+                        if (now >= data.timeExpiry)
                             throw 'Time expired!';
                         AXIOS.post(self.getYocoUrl('charges'), {
                             token: reqData.id,
@@ -178,7 +203,6 @@ export class Plugin implements IPlugin {
                             if (x.status === 201) {
                                 features.emitEvent(data.notifyService, YocoSourcePluginEvents.paymentComplete, {
                                     publicKey: data.publicKey,
-                                    live: reqData.liveMode,
                                     amount: data.amount,
                                     paymentReference: data.paymentReference,
                                     paymentInternalReference: data.paymentInternalReference,
@@ -187,7 +211,10 @@ export class Plugin implements IPlugin {
                                     lastName: data.lastName,
                                     email: data.email,
                                     cell: data.cell,
-                                    payment: reqData
+                                    payment: {
+                                        req: reqData,
+                                        res: x.data
+                                    }
                                 });
                                 return res.status(201).send({ status: x.data.status });
                             }
