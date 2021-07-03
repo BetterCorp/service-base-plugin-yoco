@@ -24,7 +24,7 @@
       "httpAutoRedirect": false
     },
     "yoco": {
-      "myHost": "http://10.1.1.16:8079",
+      "myHost": "http://localhost:8079",
       "commsToken": "0a09de7fa875dabd809aa299bc0fa80e",
       "commsTokenIV": "9bc57c276d59b6bcea939e946a3260a2",
       "sandboxConfig": {

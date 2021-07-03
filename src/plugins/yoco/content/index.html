@@ -54,6 +54,19 @@
     }
   </style>
   <script>
+    const postMessageUp = (msg, meta, errorMessage) => {
+      window.top.postMessage({
+        action: "PAYMENT-IFRAME",
+        message: msg,
+        meta,
+        errorMessage
+      }, '*')
+    };
+    const handleError = (msg) => {
+      postMessageUp('PAYMENT-ERROR', undefined, msg);
+      console.log(msg)
+      setDefaultPayText();
+    }
     const buttonPay = document.getElementById('pay-button');
     const form = document.getElementById('payment-form');
     const variables = JSON.parse('{{VARIABLES}}');
@@ -85,6 +98,9 @@
       metadata: variables.metadata,
       customer: variables.customer,
     });
+    inline.on('ready', (event) => {
+      postMessageUp('PAYMENT-READY', true)
+    });
     // this ID matches the id of the element we created earlier.
     inline.mount('#card-frame');
 
@@ -100,7 +116,8 @@
         setDefaultPayText('Creating Secure Token...', true);
         if (result.error) {
           const errorMessage = result.error.message;
-          errorMessage && alert("error occured: " + errorMessage);
+          //errorMessage && console.log("error occured: " + errorMessage);
+          handleError(errorMessage || 'An error occurred')
         } else {
           var myHeaders = new Headers();
           myHeaders.append("Content-Type", "application/json");
@@ -115,15 +132,18 @@
             .then(response => response.json())
             .then(result => {
               setDefaultPayText('Payment Received...', true);
+              postMessageUp('PAYMENT-SUCCESS', {
+                internalReference: result.reference
+              })
             }).catch(x => {
               setDefaultPayText();
-              alert("error occured: " + JSON.stringify(x));
+              handleError(x.message)
             })
         }
       }).catch(function(error) {
         // Re-enable button now that request is complete
         setDefaultPayText();
-        alert("error occured: " + error);
+        handleError(error.message || error)
       });
     });
     setDefaultPayText();

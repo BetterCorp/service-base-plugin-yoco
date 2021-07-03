@@ -216,7 +216,11 @@ export class Plugin implements IPlugin {
                                         res: x.data
                                     }
                                 });
-                                return res.status(201).send({ status: x.data.status });
+                                return res.status(201).send({
+                                    status: x.data.status,
+                                    reference: data.paymentReference,
+                                    internalReference: data.paymentInternalReference
+                                });
                             }
                             features.log.error(x.data);
                             res.status(500).send({ status: x.data.displayMessage });
