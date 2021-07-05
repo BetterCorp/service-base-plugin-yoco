@@ -131,6 +131,12 @@
           fetch(variables.url, requestOptions)
             .then(response => response.json())
             .then(result => {
+              console.log(result)
+              if (result.status !== true) {
+                setDefaultPayText();
+                handleError(result.message);
+                return;
+              }
               setDefaultPayText('Payment Received...', true);
               postMessageUp('PAYMENT-SUCCESS', {
                 internalReference: result.reference

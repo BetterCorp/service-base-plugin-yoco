@@ -58,6 +58,7 @@ export class Plugin implements IPlugin {
                     merchantConfig.secretKey = data.client.secretKey;
                 }
                 try {
+                    let amountInCents = Number.parseInt((data.data.amount * 100).toFixed(0))
                     let workingObj = {
                         time: new Date().getTime(),
                         timeExpiry: new Date().getTime() + (1000 * 60 * 60),
@@ -75,7 +76,7 @@ export class Plugin implements IPlugin {
                         lastName: data.data.lastName,
                         email: data.data.email,
                         cell: data.data.cell,
-                        amountInCents: data.data.amount * 100,
+                        amountInCents: amountInCents,
                         random: crypto.randomBytes(Math.floor((Math.random() * 100) + 1)).toString('hex'),
                         notifyService: data.data.sourcePluginName
                     };
@@ -113,7 +114,7 @@ export class Plugin implements IPlugin {
                             lastName: data.data.lastName,
                             email: data.data.email,
                             cell: data.data.cell,
-                            amountInCents: data.data.amount * 100,
+                            amountInCents: amountInCents,
                             random: '',
                             notifyService: data.data.sourcePluginName
                         }
@@ -191,6 +192,7 @@ export class Plugin implements IPlugin {
                         let now = new Date().getTime();
                         if (now >= data.timeExpiry)
                             throw 'Time expired!';
+                        features.log.debug(data);
                         AXIOS.post(self.getYocoUrl('charges'), {
                             token: reqData.id,
                             amountInCents: data.amountInCents,
@@ -203,7 +205,7 @@ export class Plugin implements IPlugin {
                             if (x.status === 201) {
                                 features.emitEvent(data.notifyService, YocoSourcePluginEvents.paymentComplete, {
                                     publicKey: data.publicKey,
-                                    amount: data.amount,
+                                    amount: data.amountInCents,
                                     paymentReference: data.paymentReference,
                                     paymentInternalReference: data.paymentInternalReference,
                                     currency: data.currency,
@@ -217,21 +219,21 @@ export class Plugin implements IPlugin {
                                     }
                                 });
                                 return res.status(201).send({
-                                    status: x.data.status,
+                                    status: x.data.status === 'successful',
                                     reference: data.paymentReference,
                                     internalReference: data.paymentInternalReference
                                 });
                             }
                             features.log.error(x.data);
-                            res.status(500).send({ status: x.data.displayMessage });
+                            res.status(500).send({ status: false, message: x.data.displayMessage });
                         }).catch(x => {
-                            features.log.error(x);
-                            res.status(500).send({ status: x.data.displayMessage });
+                            features.log.error(x.response.data);
+                            res.status(500).send({ status: false, message: x.response.data.displayMessage });
                         });
                     }
                     catch (xcc) {
                         features.log.error(xcc);
-                        res.status(400).send('An unknown error occurred');
+                        res.status(400).send({ status: false, message: 'An unknown error occurred' });
                     }
                 }
             });

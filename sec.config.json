@@ -1,5 +1,11 @@
 {
-  "enabledPlugins": [],
+  "enabledPlugins": {
+    "plugin-hello": false,
+    "events-rabbitmq": true,
+    "plugin-express": true,
+    "plugin-express-jwt": false,
+    "yoco": true
+  },
   "plugins": {
     "events-rabbitmq": {
       "prefetch": 10,
@@ -23,7 +29,7 @@
       "httpAndHttps": false,
       "httpAutoRedirect": false
     },
-    "yoco": {
+    "plugin-yoco": {
       "myHost": "http://localhost:8079",
       "commsToken": "0a09de7fa875dabd809aa299bc0fa80e",
       "commsTokenIV": "9bc57c276d59b6bcea939e946a3260a2",
@@ -33,5 +39,12 @@
       }
     }
   },
-  "debug": true
+  "debug": true,
+  "mappedPlugins": {
+    "plugin-hello": "plugin-hello",
+    "plugin-express": "plugin-express",
+    "plugin-express-jwt": "plugin-express-jwt",
+    "yoco": "plugin-yoco",
+    "betterstore-backend": "betterstore-backend"
+  }
 }
