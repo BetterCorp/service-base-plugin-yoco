@@ -24,13 +24,13 @@
     "typescript": "^3.9.10"
   },
   "dependencies": {
-    "@bettercorp/service-base": "^4.1.20210605231337",
+    "@bettercorp/service-base": "^4.1.20210606192139",
     "@bettercorp/service-base-plugin-events-rabbitmq": "^1.0.10",
     "@bettercorp/service-base-plugin-web-server": "^1.0.18",
     "@bettercorp/tools": "^1.0.8",
     "@types/node": "^14.17.4",
     "@types/request": "^2.48.5",
-    "@types/sax": "^1.2.1",
+    "@types/sax": "^1.2.2",
     "@types/uuid": "^8.3.1",
     "@types/ws": "^7.4.6",
     "axios": "^0.21.1",
