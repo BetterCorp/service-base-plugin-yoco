@@ -8,8 +8,6 @@
     "dev": "nodemon -L --watch src/**/*.ts --watch plugins/**/*.ts --exec ts-node src/index.ts",
     "start": "node lib/index.js",
     "build": "tsc",
-    "deploy": "npm publish",
-    "publish": "npm publish",
     "version": "node ./node_modules/@bettercorp/service-base/build/version.js $0"
   },
   "files": [
@@ -24,7 +22,7 @@
     "typescript": "^3.9.10"
   },
   "dependencies": {
-    "@bettercorp/service-base": "^4.1.20210606192139",
+    "@bettercorp/service-base": "^4.1.20210606220444",
     "@bettercorp/service-base-plugin-events-rabbitmq": "^1.0.10",
     "@bettercorp/service-base-plugin-web-server": "^1.0.18",
     "@bettercorp/tools": "^1.0.8",
