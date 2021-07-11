@@ -1,10 +1,10 @@
-FROM node:lts-alpine
+FROM @betterweb/better-service-base:base-latest
 
-RUN apk update
-RUN npm i -g typescript@4.3.5 ts-node@10.0.0
+ADD ./package.json /home/bsb-build/
+ADD ./package-lock.json /home/bsb-build/
+ADD ./lib /home/bsb-build/
 
-WORKDIR /home/bsb
-
-RUN npm i --save @bettercorp/${SERVICE}@${RELEASE}
+# Actual plugin/service
+RUN npm i --save /home/bsb-build
 
 CMD npm start

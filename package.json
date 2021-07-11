@@ -22,7 +22,7 @@
     "typescript": "^3.9.10"
   },
   "dependencies": {
-    "@bettercorp/service-base": "^4.1.20210608194548",
+    "@bettercorp/service-base": "^4.1.20210611100038",
     "@bettercorp/service-base-plugin-web-server": "^1.0.18",
     "@bettercorp/tools": "^1.0.8",
     "@types/node": "^14.17.5",
