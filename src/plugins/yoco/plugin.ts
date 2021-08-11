@@ -13,7 +13,7 @@ import { express } from '@bettercorp/service-base-plugin-web-server/lib/plugins/
 
 export type PromiseResolve<TData = any, TReturn = void> = (data: TData) => TReturn;
 export class yoco extends CPluginClient<any> {
-  public readonly _pluginName: string = "payfast";
+  public readonly _pluginName: string = "yoco";
   private _refPluginName: string;
   constructor(self: IPlugin) {
     super(self);
