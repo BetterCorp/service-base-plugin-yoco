@@ -167,7 +167,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)
                         throw 'Time expired!';
-                    let content = FS.readFileSync(PATH.join(self.cwd, './src/plugins/yoco/content/index.html')).toString();
+                    let content = FS.readFileSync(PATH.join(self.cwd, './node_modules/@bettercorp/service-base-plugin-yoco/lib/plugins/yoco/content/index.html')).toString();
                     let variablesToClient = {
                         url: self.getPluginConfig().myHost + '/Yoco/' + req.params.token,
                         amountFormatted: data.amountFormatted,
