@@ -107,7 +107,7 @@ export enum YocoPluginEvents {
   makePaymentRequest = "make-payment-request"
 }
 export enum YocoSourcePluginEvents {
-  paymentComplete = "payment-complete"
+  paymentComplete = "yoco-payment-complete"
 }
 export interface YocoPluginConfig {
   myHost: string;
