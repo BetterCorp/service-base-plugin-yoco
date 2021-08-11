@@ -9,7 +9,8 @@
     "version": "node ./node_modules/@bettercorp/service-base/build/version.js $0"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "content/**/*"
   ],
   "main": "lib/index.js",
   "version": "1.2.0",
