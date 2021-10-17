@@ -3,17 +3,17 @@ import * as crypto from 'crypto';
 
 export class eAndD {
   private static readonly algorithm: string = 'aes-256-ctr';
-  static encrypt(self: CPlugin, text: string) {
+  static async encrypt(self: CPlugin, text: string) {
 
-    const cipher = crypto.createCipheriv(this.algorithm, self.getPluginConfig().commsToken, Buffer.from(self.getPluginConfig().commsTokenIV, 'hex'));
+    const cipher = crypto.createCipheriv(this.algorithm, (await self.getPluginConfig()).commsToken, Buffer.from((await self.getPluginConfig()).commsTokenIV, 'hex'));
 
     const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
 
     return encrypted.toString('hex');
   }
-  static decrypt(self: CPlugin, hash: string) {
+  static async decrypt(self: CPlugin, hash: string) {
 
-    const decipher = crypto.createDecipheriv(this.algorithm, self.getPluginConfig().commsToken, Buffer.from(self.getPluginConfig().commsTokenIV, 'hex'));
+    const decipher = crypto.createDecipheriv(this.algorithm, (await self.getPluginConfig()).commsToken, Buffer.from((await self.getPluginConfig()).commsTokenIV, 'hex'));
 
     const decrpyted = Buffer.concat([decipher.update(Buffer.from(hash, 'hex')), decipher.final()]);
 
