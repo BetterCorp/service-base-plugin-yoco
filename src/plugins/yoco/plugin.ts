@@ -1,4 +1,4 @@
-import { CPlugin, CPluginClient, IPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin, CPluginClient, IPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { Tools } from '@bettercorp/tools/lib/Tools';
 import { YocoDefaults, YocoPluginConfig, YocoPluginEvents, YocoSourcePluginEvents } from '../../lib';
 import { Request as ERequest, Response as EResponse } from 'express';
@@ -13,25 +13,25 @@ import { express } from '@bettercorp/service-base-plugin-web-server/lib/plugins/
 
 export type PromiseResolve<TData = any, TReturn = void> = (data: TData) => TReturn;
 export class yoco extends CPluginClient<any> {
-  public readonly _pluginName: string = "yoco";
-  private _refPluginName: string;
-  constructor(self: IPlugin) {
-    super(self);
-    this._refPluginName = this.refPlugin.pluginName;
-  }
+    public readonly _pluginName: string = "yoco";
+    private _refPluginName: string;
+    constructor(self: IPlugin) {
+        super(self);
+        this._refPluginName = this.refPlugin.pluginName;
+    }
 
-  async ping(): Promise<boolean> {
-    return this.emitEventAndReturn(YocoPluginEvents.ping);
-  }
+    async ping(): Promise<boolean> {
+        return this.emitEventAndReturn(YocoPluginEvents.ping);
+    }
 
-  async startPaymentRequest(request: any): Promise<any> {
-    request.data.sourcePluginName = this._refPluginName;
-    return this.emitEventAndReturn(YocoPluginEvents.makePaymentRequest, request);
-  }
+    async startPaymentRequest(request: any): Promise<any> {
+        request.data.sourcePluginName = this._refPluginName;
+        return this.emitEventAndReturn(YocoPluginEvents.makePaymentRequest, request);
+    }
 
-  async onPaymentComplete(listener: (response: any) => void) {
-    this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener as any);
-  }
+    async onPaymentComplete(listener: (response: any) => void) {
+        this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener as any);
+    }
 }
 
 export class Plugin extends CPlugin<YocoPluginConfig> {
@@ -57,7 +57,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
             self.log.info('USE JSON FOR EXPRESS');
             self.express.use(EXPRESS.json({ limit: '5mb' }));
 
-            self.onReturnableEvent(null, YocoPluginEvents.ping, async (resolve, reject, data) => {
+            self.onReturnableEvent(null, YocoPluginEvents.ping, (data) => new Promise(async (resolve, reject) => {
                 if (Tools.isNullOrUndefined(data))
                     return reject('DATA UNDEFINED');
                 AXIOS.post<any>(self.getYocoUrl('charges'), {}, {
@@ -70,8 +70,8 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     self.log.error(x);
                     resolve(false);
                 });
-            });
-            self.onReturnableEvent(null, YocoPluginEvents.makePaymentRequest, async (resolve, reject, data) => {
+            }));
+            self.onReturnableEvent(null, YocoPluginEvents.makePaymentRequest, (data) => new Promise(async (resolve, reject) => {
                 if (Tools.isNullOrUndefined(data))
                     return reject('DATA UNDEFINED');
                 let merchantConfig = (await self.getPluginConfig()).sandboxConfig;
@@ -146,7 +146,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     self.log.error(erc);
                     return reject(erc);
                 }
-            });
+            }));
             resolve();
         });
     }

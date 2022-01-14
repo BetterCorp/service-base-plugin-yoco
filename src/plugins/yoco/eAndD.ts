@@ -1,4 +1,4 @@
-import { CPlugin } from '@bettercorp/service-base/lib/ILib';
+import { CPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import * as crypto from 'crypto';
 
 export class eAndD {
