@@ -2,3 +2,7 @@
 node_modules
 _old
 /sec.config.json
+/node_modules
+/_exports
+/junit.xml
+/test-file-*
