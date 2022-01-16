@@ -11,7 +11,6 @@ import { eAndD } from './eAndD';
 import * as EXPRESS from 'express';
 import { express } from '@bettercorp/service-base-plugin-web-server/lib/plugins/express/express';
 
-export type PromiseResolve<TData = any, TReturn = void> = (data: TData) => TReturn;
 export class yoco extends CPluginClient<any> {
     public readonly _pluginName: string = "yoco";
     private _refPluginName: string;
