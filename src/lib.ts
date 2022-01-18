@@ -91,7 +91,16 @@ export interface YocoPaymentCompleteData {
   lastName: string;
   email: string;
   cell: string;
-  payment: YocoPaymentResult;
+  payment: {
+    req: any,
+    res: YocoPaymentResult;
+  };
+}
+export interface YocoPaymentFailedData {
+  errorType: string;
+  errorCode: string;
+  errorMessage: string;
+  displayMessage: string;
 }
 export interface YocoPaymentResult {
   source: YocoPaymentResultSource;

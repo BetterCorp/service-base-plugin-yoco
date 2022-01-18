@@ -1,6 +1,6 @@
 import { CPlugin, CPluginClient, IPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { Tools } from '@bettercorp/tools/lib/Tools';
-import { YocoDefaults, YocoGetSecret, YocoPluginConfig, YocoPluginEvents, YocoSourcePluginEvents } from '../../lib';
+import { YocoDefaults, YocoGetSecret, YocoPaymentCompleteData, YocoPaymentFailedData, YocoPaymentRequest, YocoPaymentResult, YocoPluginConfig, YocoPluginEvents, YocoSourcePluginEvents } from '../../lib';
 import AXIOS from 'axios';
 import { AxiosResponse as AResponse } from 'axios';
 import * as crypto from 'crypto';
@@ -21,7 +21,7 @@ export class yoco extends CPluginClient<any> {
         return this.emitEventAndReturn(YocoPluginEvents.ping);
     }
 
-    async startPaymentRequest(request: any): Promise<any> {
+    async startPaymentRequest(request: YocoPaymentRequest): Promise<any> {
         request.data.sourcePluginName = this._refPluginName;
         return this.emitEventAndReturn(YocoPluginEvents.makePaymentRequest, request);
     }
@@ -30,8 +30,8 @@ export class yoco extends CPluginClient<any> {
         this.refPlugin.onReturnableEvent<YocoGetSecret, string>(this._refPluginName, YocoSourcePluginEvents.getSecret, listener);
     }
 
-    async onPaymentComplete(listener: (response: any) => void) {
-        this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener as any);
+    async onPaymentComplete(listener: (response: YocoPaymentCompleteData) => void) {
+        this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener);
     }
 }
 
@@ -70,6 +70,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                 try {
                     let amountInCents = Number.parseInt((data.data.amount * 100).toFixed(0));
                     let workingObj = {
+                        live: data.client.live,
                         time: new Date().getTime(),
                         timeExpiry: new Date().getTime() + (1000 * 60 * 60),
                         publicKey: merchantConfig.publicKey,
@@ -108,6 +109,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     return resolve({
                         url: `${ (await self.getPluginConfig()).myHost }/Yoco/${ encodeURIComponent(requestKey) }`,
                         request: {
+                            live: data.client.live,
                             time: new Date().getTime(),
                             timeExpiry: 0,
                             publicKey: merchantConfig.publicKey,
@@ -194,7 +196,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     let decrypted = await eAndD.decrypt(self, decodeURIComponent(req.params.token));
                     let data = JSON.parse(decrypted);
                     let reqData = req.body;
-                    console.log(reqData);
+                    
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)
                         throw 'Time expired!';
@@ -218,9 +220,10 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                         headers: {
                             'X-Auth-Secret-Key': secretKey!
                         }
-                    }).then((x: AResponse<any, any>): any | void => {
+                    }).then((x: AResponse<YocoPaymentResult | YocoPaymentFailedData, any>): any | void => {
                         if (x.status === 201) {
-                            self.emitEvent(data.notifyService, YocoSourcePluginEvents.paymentComplete, {
+                            self.emitEvent<YocoPaymentCompleteData>(data.notifyService, YocoSourcePluginEvents.paymentComplete, {
+                                live: data.live,
                                 publicKey: data.publicKey,
                                 amount: data.amountInCents,
                                 paymentReference: data.paymentReference,
@@ -233,17 +236,17 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                                 cell: data.cell,
                                 payment: {
                                     req: reqData,
-                                    res: x.data
+                                    res: (x.data as YocoPaymentResult)
                                 }
                             });
                             return res.status(201).send({
-                                status: x.data.status === 'successful',
+                                status: (x.data as YocoPaymentResult).status === 'successful',
                                 reference: data.paymentReference,
                                 internalReference: data.paymentInternalReference
                             });
                         }
                         self.log.error(x.data);
-                        res.status(500).send({ status: false, message: x.data.displayMessage });
+                        res.status(500).send({ status: false, message: (x.data as YocoPaymentFailedData).displayMessage });
                     }).catch(x => {
                         self.log.error(x.response.data);
                         res.status(500).send({ status: false, message: x.response.data.displayMessage });
