@@ -1,3 +1,5 @@
+import { IDictionary } from '@bettercorp/tools/lib/Interfaces';
+
 export enum YocoDefaults {
   url = "https://online.yoco.com/",
   version = "v1"
@@ -21,6 +23,7 @@ export interface YocoPaymentRequestData {
   amount: number;
   paymentReference: string;
   paymentInternalReference: string;
+  additionalData: IDictionary<string>;
   currency: string;
   symbol: string;
   sourcePluginName: string;
@@ -38,6 +41,7 @@ export interface YocoPaymentTokenData {
   cancelUrl: string;
   paymentReference: string;
   paymentInternalReference: string;
+  additionalData: IDictionary<string>;
   currency: string;
   symbol: string;
   amount: number;
@@ -62,6 +66,12 @@ export interface YocoPaymentClientData {
 }
 export interface YocoPaymentClientMetaData {
   internalReference: string;
+  additionalData: IDictionary<string>;
+}
+export interface YocoGetSecret {
+  publicKey: string;
+  paymentReference: string;
+  paymentInternalReference: string;
 }
 export interface YocoPaymentClientCustomerData {
   email: string;
@@ -75,6 +85,7 @@ export interface YocoPaymentCompleteData {
   amount: number;
   paymentReference: string;
   paymentInternalReference: string;
+  additionalData: IDictionary<string>;
   currency: string;
   firstName: string;
   lastName: string;
@@ -107,7 +118,8 @@ export enum YocoPluginEvents {
   makePaymentRequest = "make-payment-request"
 }
 export enum YocoSourcePluginEvents {
-  paymentComplete = "yoco-payment-complete"
+  paymentComplete = "yoco-payment-complete",
+  getSecret = "yoco-get-secret"
 }
 export interface YocoPluginConfig {
   myHost: string;

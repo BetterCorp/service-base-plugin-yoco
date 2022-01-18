@@ -1,15 +1,13 @@
 import { CPlugin, CPluginClient, IPlugin } from '@bettercorp/service-base/lib/interfaces/plugins';
 import { Tools } from '@bettercorp/tools/lib/Tools';
-import { YocoDefaults, YocoPluginConfig, YocoPluginEvents, YocoSourcePluginEvents } from '../../lib';
-import { Request as ERequest, Response as EResponse } from 'express';
+import { YocoDefaults, YocoGetSecret, YocoPluginConfig, YocoPluginEvents, YocoSourcePluginEvents } from '../../lib';
 import AXIOS from 'axios';
 import { AxiosResponse as AResponse } from 'axios';
 import * as crypto from 'crypto';
 import * as FS from 'fs';
 import * as PATH from 'path';
 import { eAndD } from './eAndD';
-import * as EXPRESS from 'express';
-import { express } from '@bettercorp/service-base-plugin-web-server/lib/plugins/express/express';
+import { fastify } from '@bettercorp/service-base-plugin-web-server/lib/plugins/fastify/fastify';
 
 export class yoco extends CPluginClient<any> {
     public readonly _pluginName: string = "yoco";
@@ -28,33 +26,24 @@ export class yoco extends CPluginClient<any> {
         return this.emitEventAndReturn(YocoPluginEvents.makePaymentRequest, request);
     }
 
+    async onGetSecret(listener: (request?: YocoGetSecret) => Promise<string>) {
+        this.refPlugin.onReturnableEvent<YocoGetSecret, string>(this._refPluginName, YocoSourcePluginEvents.getSecret, listener);
+    }
+
     async onPaymentComplete(listener: (response: any) => void) {
         this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener as any);
     }
 }
 
 export class Plugin extends CPlugin<YocoPluginConfig> {
-    express!: express;
+    fastify!: fastify;
     private getYocoUrl(action: string): string {
         return `${ YocoDefaults.url }${ YocoDefaults.version }/${ action }/`;
     }
     public init(): Promise<void> {
         const self = this;
         return new Promise((resolve) => {
-            self.express = new express(self);
-            self.express.use(async (req: any, res: any, next: Function) => {
-                self.log.debug(`REQ[${ req.method }] ${ req.path } (${ JSON.stringify(req.query) })`);
-                res.setHeader('Access-Control-Allow-Headers', '*');
-                res.setHeader('Access-Control-Allow-Origin', '*');
-                res.setHeader('Access-Control-Allow-Methods', '*');
-
-                if (req.method.toUpperCase() === 'OPTIONS')
-                    return res.sendStatus(200);
-
-                next();
-            });
-            self.log.info('USE JSON FOR EXPRESS');
-            self.express.use(EXPRESS.json({ limit: '5mb' }));
+            self.fastify = new fastify(self);
 
             self.onReturnableEvent(null, YocoPluginEvents.ping, (data) => new Promise(async (resolve, reject) => {
                 if (Tools.isNullOrUndefined(data))
@@ -84,11 +73,11 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                         time: new Date().getTime(),
                         timeExpiry: new Date().getTime() + (1000 * 60 * 60),
                         publicKey: merchantConfig.publicKey,
-                        secretKey: merchantConfig.secretKey,
                         returnUrl: data.data.returnUrl,
                         cancelUrl: data.data.cancelUrl,
                         paymentReference: data.data.paymentReference,
                         paymentInternalReference: data.data.paymentInternalReference,
+                        additionalData: data.data.additionalData,
                         currency: data.data.currency,
                         symbol: data.data.symbol,
                         amount: data.data.amount,
@@ -122,11 +111,11 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                             time: new Date().getTime(),
                             timeExpiry: 0,
                             publicKey: merchantConfig.publicKey,
-                            secretKey: '',
                             returnUrl: data.data.returnUrl,
                             cancelUrl: data.data.cancelUrl,
                             paymentReference: data.data.paymentReference,
                             paymentInternalReference: data.data.paymentInternalReference,
+                            additionalData: data.data.additionalData,
                             currency: data.data.currency,
                             symbol: data.data.symbol,
                             amount: data.data.amount,
@@ -154,7 +143,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
         const self = this;
         return new Promise((resolve) => {
             self.log.debug(`loaded`);
-            self.express.get('/Yoco/:token', async (req: ERequest, res: EResponse) => {
+            self.fastify.get<any, any>('/Yoco/:token', async (req, res) => {
                 try {
                     /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
                     const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
@@ -175,7 +164,8 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                         publicKey: data.publicKey,
                         description: data.paymentReference,
                         metadata: {
-                            internalReference: data.paymentInternalReference
+                            internalReference: data.paymentInternalReference,
+                            additionalData: data.additionalData
                         },
                         customer: {
                             email: data.email,
@@ -185,7 +175,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                         }
                     };
                     content = content.replace('{{VARIABLES}}', JSON.stringify(variablesToClient));
-                    res.setHeader('content-type', 'text/html');
+                    res.header('content-type', 'text/html');
                     res.send(content);
                 }
                 catch (xcc) {
@@ -194,7 +184,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                 }
             });
             self.log.debug(`loaded`);
-            self.express.post('/Yoco/:token', async (req: ERequest, res: EResponse) => {
+            self.fastify.post<any, any>('/Yoco/:token', async (req, res): Promise<any> => {
                 try {
                     /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
                     const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
@@ -208,14 +198,25 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)
                         throw 'Time expired!';
-                    self.log.debug(data);
+
+                    let secretKey = await this.emitEventAndReturn<YocoGetSecret, string | null | undefined>(data.notifyService, YocoSourcePluginEvents.getSecret, {
+                        publicKey: data.publicKey,
+                        paymentReference: data.paymentReference,
+                        paymentInternalReference: data.paymentInternalReference
+                    });
+
+                    if (Tools.isNullOrUndefined(secretKey)) {
+                        self.log.error('UNABLE TO GET SECRET FROM SRC');
+                        return res.status(500).send({ status: false, message: 'Unable to verify payment request' });
+                    }
+
                     AXIOS.post<any>(self.getYocoUrl('charges'), {
                         token: reqData.id,
                         amountInCents: data.amountInCents,
                         currency: data.currency
                     }, {
                         headers: {
-                            'X-Auth-Secret-Key': data.secretKey
+                            'X-Auth-Secret-Key': secretKey!
                         }
                     }).then((x: AResponse<any, any>): any | void => {
                         if (x.status === 201) {
@@ -224,6 +225,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                                 amount: data.amountInCents,
                                 paymentReference: data.paymentReference,
                                 paymentInternalReference: data.paymentInternalReference,
+                                additionalData: data.additionalData,
                                 currency: data.currency,
                                 firstName: data.firstName,
                                 lastName: data.lastName,
