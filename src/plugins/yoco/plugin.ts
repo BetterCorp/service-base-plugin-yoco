@@ -107,7 +107,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     requestKey[key.char1] = `${Math.floor((Math.random() * 9) + 1)}`[0];
                     requestKey[key.char2] = `${Math.floor((Math.random() * 9) + 1)}`[0];*/
                     return resolve({
-                        url: `${ (await self.getPluginConfig()).myHost }/Yoco/${ encodeURIComponent(requestKey) }`,
+                        url: `${ (await self.getPluginConfig()).myHost }/Yoco/Start?ref=${ encodeURIComponent(requestKey) }`,
                         request: {
                             live: data.client.live,
                             time: new Date().getTime(),
@@ -145,21 +145,22 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
         const self = this;
         return new Promise((resolve) => {
             self.log.debug(`loaded`);
-            self.fastify.get<any, any>('/Yoco/:token', async (req, res) => {
+            self.fastify.get<any, any, any>('/Yoco/Start', async (req, res) => {
                 try {
-                    /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
+                    /*const cipherText = Buffer.from(decodeURIComponent(req.query.ref), "base64");
                     const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
                         authTagLength: 16
                     });
                     let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');*/
-                    let decrypted = await eAndD.decrypt(self, decodeURIComponent(req.params.token));
+                    let decrypted = await eAndD.decrypt(self, decodeURIComponent(req.query.ref));
                     let data = JSON.parse(decrypted);
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)
                         throw 'Time expired!';
                     let content = FS.readFileSync(PATH.join(self.cwd, './node_modules/@bettercorp/service-base-plugin-yoco/content/yoco/index.html')).toString();
                     let variablesToClient = {
-                        url: (await self.getPluginConfig()).myHost + '/Yoco/' + req.params.token,
+                        url: (await self.getPluginConfig()).myHost + '/Yoco/Start',
+                        ref: req.query.ref,
                         amountFormatted: data.amountFormatted,
                         amountCents: data.amountInCents,
                         currency: data.currency,
@@ -186,16 +187,16 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                 }
             });
             self.log.debug(`loaded`);
-            self.fastify.post<any, any>('/Yoco/:token', async (req, res): Promise<any> => {
+            self.fastify.post<any, any, any>('/Yoco/Start', async (req, res): Promise<any> => {
                 try {
-                    /*const cipherText = Buffer.from(decodeURIComponent(req.params.token), "base64");
+                    /*const cipherText = Buffer.from(decodeURIComponent(req.query.ref), "base64");
                     const cipher = crypto.createDecipheriv("aes-256-ccm", Buffer.from(features.getPluginConfig().commsToken, 'hex'), crypto.pseudoRandomBytes(6).toString('hex'), {
                         authTagLength: 16
                     });
                     let decrypted = Buffer.concat([cipher.update(cipherText), cipher.final()]).toString('utf8');*/
-                    let decrypted = await eAndD.decrypt(self, decodeURIComponent(req.params.token));
-                    let data = JSON.parse(decrypted);
                     let reqData = req.body;
+                    let decrypted = await eAndD.decrypt(self, decodeURIComponent(reqData.ref));
+                    let data = JSON.parse(decrypted);
                     
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)

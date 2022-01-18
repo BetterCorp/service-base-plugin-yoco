@@ -121,6 +121,7 @@
         } else {
           var myHeaders = new Headers();
           myHeaders.append("Content-Type", "application/json");
+          result.ref = variables.ref;
           var requestOptions = {
             method: 'POST',
             headers: myHeaders,
