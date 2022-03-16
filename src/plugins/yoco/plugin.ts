@@ -27,11 +27,11 @@ export class yoco extends CPluginClient<any> {
     }
 
     async onGetSecret(listener: (request?: YocoGetSecret) => Promise<string>) {
-        this.refPlugin.onReturnableEvent<YocoGetSecret, string>(this._refPluginName, YocoSourcePluginEvents.getSecret, listener);
+        await this.refPlugin.onReturnableEvent<YocoGetSecret, string>(this._refPluginName, YocoSourcePluginEvents.getSecret, listener);
     }
 
-    async onPaymentComplete(listener: (response: YocoPaymentCompleteData) => void) {
-        this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener);
+    async onPaymentComplete(listener: { (response: YocoPaymentCompleteData): Promise<void>; }) {
+        await this.refPlugin.onEvent(this._refPluginName, YocoSourcePluginEvents.paymentComplete, listener);
     }
 }
 
@@ -197,7 +197,7 @@ export class Plugin extends CPlugin<YocoPluginConfig> {
                     let reqData = req.body;
                     let decrypted = await eAndD.decrypt(self, decodeURIComponent(reqData.ref));
                     let data = JSON.parse(decrypted);
-                    
+
                     let now = new Date().getTime();
                     if (now >= data.timeExpiry)
                         throw 'Time expired!';
