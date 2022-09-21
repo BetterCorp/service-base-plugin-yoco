@@ -1,0 +1,39 @@
+{
+  "key": "service-yoco",
+  "name": "Yoco",
+  "icon": "yoco.png",
+  "description": "Yoco payment gateway",
+  "badges": [
+    {
+      "url": "https://codecov.io/gh/BetterCorp/service-base-service-yoco",
+      "img": "https://codecov.io/gh/BetterCorp/service-base-service-yoco/branch/master/graph/badge.svg"
+    },
+    {
+      "img": "https://img.shields.io/github/license/BetterCorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://img.shields.io/snyk/vulnerabilities/github/BetterCorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://img.shields.io/github/issues-raw/BetterCorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://github.com/BetterCorp/service-base-service-yoco/actions/workflows/develop.yml/badge.svg?branch=develop"
+    },
+    {
+      "img": "https://github.com/BetterCorp/service-base-service-yoco/actions/workflows/master.yml/badge.svg?branch=master"
+    },
+    {
+      "img": "https://img.shields.io/github/issues-raw/BetterCorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://img.shields.io/npm/dt/@bettercorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://img.shields.io/bundlephobia/min/@bettercorp/service-base-service-yoco"
+    },
+    {
+      "img": "https://img.shields.io/npm/v/@bettercorp/service-base-service-yoco"
+    }
+  ]
+}

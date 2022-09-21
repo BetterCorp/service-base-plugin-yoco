@@ -1,8 +1,8 @@
-import { IDictionary } from '@bettercorp/tools/lib/Interfaces';
+import { IDictionary } from "@bettercorp/tools/lib/Interfaces";
 
 export enum YocoDefaults {
   url = "https://online.yoco.com/",
-  version = "v1"
+  version = "v1",
 }
 export interface IClientConfig {
   live: Boolean;
@@ -36,7 +36,7 @@ export interface YocoPaymentTokenData {
   time: number;
   timeExpiry: number;
   publicKey: string;
-  secretKey: string;
+  //secretKey: string;
   returnUrl: string;
   cancelUrl: string;
   paymentReference: string;
@@ -92,7 +92,7 @@ export interface YocoPaymentCompleteData {
   email: string;
   cell: string;
   payment: {
-    req: any,
+    req: any;
     res: YocoPaymentResult;
   };
 }
@@ -121,22 +121,4 @@ export interface YocoPaymentResultSource {
   fingerprint: string;
   object: string;
   country: string;
-}
-export enum YocoPluginEvents {
-  ping = "ping",
-  makePaymentRequest = "make-payment-request"
-}
-export enum YocoSourcePluginEvents {
-  paymentComplete = "yoco-payment-complete",
-  getSecret = "yoco-get-secret"
-}
-export interface YocoPluginConfig {
-  myHost: string;
-  commsToken: string;
-  commsTokenIV: string;
-  sandboxConfig: YocoSandboxConfig;
-}
-export interface YocoSandboxConfig {
-  publicKey: string;
-  secretKey: string;
 }

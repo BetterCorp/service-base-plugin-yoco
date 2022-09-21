@@ -2,14 +2,16 @@
   "name": "@bettercorp/service-base-plugin-yoco",
   "license": "AGPL-3.0-only",
   "repository": {
-    "url": "https://gitlab.com/BetterCorp/BetterServiceBase/service-base-plugin-yoco"
+    "url": "https://github.com/BetterCorp/service-base-plugin-yoco"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=16.0.0"
   },
   "scripts": {
     "build": "tsc",
-    "version": "node ./node_modules/@bettercorp/service-base/build/version-bcorp.js $0",
-    "create": "ts-node node_modules/@bettercorp/service-base/lib/bootstrap.js $0",
-    "dev": "nodemon --config node_modules/@bettercorp/service-base/build/nodemon.json",
-    "start": "ts-node node_modules/@bettercorp/service-base/lib/index.js"
+    "dev": "nodemon --config node_modules/@bettercorp/service-base/development/nodemon.json",
+    "start": "ts-node node_modules/@bettercorp/service-base/lib/cli.js"
   },
   "files": [
     "lib/**/*",
