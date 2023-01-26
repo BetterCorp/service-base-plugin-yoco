@@ -46,7 +46,7 @@ export class yoco
       paymentInternalReference: string
     ): Promise<string>;
   }) {
-    this._plugin.onReturnableEvent(
+    await this._plugin.onReturnableEvent(
       "onGetSecret",
       async (
         notifyService: string,
@@ -83,7 +83,7 @@ export class yoco
       }
     ): Promise<void>;
   }) {
-    this._plugin.onEvent(
+    await this._plugin.onEvent(
       "onPaymentComplete",
       async (
         notifyService: string,
