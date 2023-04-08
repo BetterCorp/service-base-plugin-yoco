@@ -2,13 +2,13 @@ import { ServiceCallable, ServicesClient } from "@bettercorp/service-base";
 import { IDictionary } from "@bettercorp/tools/lib/Interfaces";
 import {
   IClientConfig,
+  YocoEmitEvents,
+  YocoEmitReturnableEvents,
   YocoPaymentRequestData,
   YocoPaymentRequestResponse,
   YocoPaymentResult,
-} from "../../lib";
-import { YocoEmitReturnableEvents } from "../../plugins/service-yoco/plugin";
-import { YocoEmitEvents } from "../../plugins/service-yoco/plugin";
-import { YocoReturnableEvents } from "../../plugins/service-yoco/plugin";
+  YocoReturnableEvents,
+} from "../../index";
 
 export class yoco
   extends ServicesClient<

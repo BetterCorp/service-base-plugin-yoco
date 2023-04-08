@@ -2,11 +2,13 @@ import { Tools } from "@bettercorp/tools/lib/Tools";
 import {
   IClientConfig,
   YocoDefaults,
+  YocoEmitEvents,
+  YocoEmitReturnableEvents,
   YocoPaymentFailedData,
   YocoPaymentRequestData,
-  YocoPaymentRequestResponse,
   YocoPaymentResult,
-} from "../../lib";
+  YocoReturnableEvents,
+} from "../../index";
 import AXIOS from "axios";
 import { AxiosResponse as AResponse } from "axios";
 import * as crypto from "crypto";
@@ -20,44 +22,6 @@ import {
   ServicesBase,
 } from "@bettercorp/service-base";
 import { YocoPluginConfig } from "./sec.config";
-import { IDictionary } from "@bettercorp/tools/lib/Interfaces";
-
-export interface YocoReturnableEvents extends ServiceCallable {
-  ping(): Promise<boolean>;
-  makePaymentRequest(
-    client: IClientConfig,
-    data: YocoPaymentRequestData
-  ): Promise<YocoPaymentRequestResponse>;
-}
-
-export interface YocoEmitEvents extends ServiceCallable {
-  onPaymentComplete(
-    notifyService: string,
-    publicKey: string,
-    live: Boolean,
-    amount: number,
-    paymentReference: string,
-    paymentInternalReference: string,
-    additionalData: IDictionary<string>,
-    currency: string,
-    firstName: string,
-    lastName: string,
-    email: string,
-    cell: string,
-    payment: {
-      req: any;
-      res: YocoPaymentResult;
-    }
-  ): Promise<void>;
-}
-export interface YocoEmitReturnableEvents extends ServiceCallable {
-  onGetSecret(
-    notifyService: string,
-    publicKey: string,
-    paymentReference: string,
-    paymentInternalReference: string
-  ): Promise<string>;
-}
 
 export class Service extends ServicesBase<
   ServiceCallable,
