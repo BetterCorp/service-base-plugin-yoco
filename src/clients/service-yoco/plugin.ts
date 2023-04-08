@@ -9,7 +9,6 @@ import {
 import { YocoEmitReturnableEvents } from "../../plugins/service-yoco/plugin";
 import { YocoEmitEvents } from "../../plugins/service-yoco/plugin";
 import { YocoReturnableEvents } from "../../plugins/service-yoco/plugin";
-import { YocoPluginConfig } from "../../plugins/service-yoco/sec.config";
 
 export class yoco
   extends ServicesClient<
@@ -17,8 +16,7 @@ export class yoco
     YocoEmitEvents,
     YocoReturnableEvents,
     YocoEmitReturnableEvents,
-    ServiceCallable,
-    YocoPluginConfig
+    ServiceCallable
   >
   implements YocoReturnableEvents
 {
